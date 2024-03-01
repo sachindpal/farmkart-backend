@@ -1,0 +1,37 @@
+openapi: 3.0.0
+info:
+    title: MINDIII API
+    description: 'TODO: Add Description'
+    contact: {}
+    version: '1.0'
+servers:
+    - url: http://192.168.10.13:3000/api/
+      variables: {}
+paths:
+    /api/puppies:
+        post:
+            tags:
+                - Auth
+            description: User Can register by this API
+            produces:
+                - application/json
+            parameters:
+                - name: Registration
+                  description: Registration object
+                  in: body
+                  required: true
+                  schema:
+                      definitions:
+                          Puppy:
+                              properties:
+                                  name:
+                                      type: string
+                                  breed:
+                                      type: string
+                                  age:
+                                      type: integer
+                                  sex:
+                                      type: string
+            responses:
+                200:
+                    description: Successfully created

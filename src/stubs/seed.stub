@@ -1,0 +1,23 @@
+/**
+ * @param  {object} knex
+ */
+export function seed(knex) {
+  // Deletes all existing entries
+  return knex('table_name')
+    .del()
+    .then(() => {
+      // Inserts seed entries
+      return Promise.all([
+        knex('table_name').insert([
+          {
+            colName: 'rowValue',
+            colName2: 'rowValue'
+          },
+          {
+            colName: 'rowValue',
+            colName2: 'rowValue'
+          }
+        ])
+      ]);
+    });
+}
