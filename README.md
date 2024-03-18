@@ -1,1 +1,0 @@
-# farmkart-backend

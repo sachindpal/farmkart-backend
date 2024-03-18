@@ -1,0 +1,25 @@
+[
+  {
+    "timestamp": "2024-03-14 16:44:18",
+    "type": "Request",
+    "appSessionId": "6486de93-1fcd-4000-b085-",
+    "correlationId": "06ae9438-4ba2-437b-bc62-",
+    "apiName": "login",
+    "payload": {
+      "mobile": "9200149000",
+      "password": "12345678"
+    }
+  },
+  {
+    "timestamp": "2024-03-14 16:44:19",
+    "type": "Error",
+    "appSessionId": "6486de93-1fcd-4000-b085-",
+    "correlationId": "06ae9438-4ba2-437b-bc62-",
+    "apiName": "login",
+    "response": {
+      "statusCode": 400,
+      "error": "Bad Request",
+      "message": "No user found"
+    }
+  }
+]
