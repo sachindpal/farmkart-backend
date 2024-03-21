@@ -1,25 +1,45 @@
 [
-  {
-    "timestamp": "2024-03-14 16:44:18",
-    "type": "Request",
-    "appSessionId": "6486de93-1fcd-4000-b085-",
-    "correlationId": "06ae9438-4ba2-437b-bc62-",
-    "apiName": "login",
-    "payload": {
-      "mobile": "9200149000",
-      "password": "12345678"
+    {
+        "timestamp": "2024-03-19 17:26:26",
+        "appSessionId": "6486de93-1fcd-4000-b085-",
+        "correlationId": "14bdbbaf-987d-4295-93cc-",
+        "apiName": "userInfo",
+        "type": "Request",
+        "payload": {
+            "languageId": "1"
+        }
+    },
+    {
+        "timestamp": "2024-03-19 17:26:29",
+        "appSessionId": "6486de93-1fcd-4000-b085-",
+        "correlationId": "14bdbbaf-987d-4295-93cc-",
+        "apiName": "userInfo",
+        "type": "Response",
+        "data": {
+            "data": {
+                "stateid": 1,
+                "districtid": 4,
+                "tehsilid": 22,
+                "villageid": 2593
+            }
+        }
+    },
+    {
+        "timestamp": "2024-03-19 17:27:25",
+        "appSessionId": "6486de93-1fcd-4000-b085-",
+        "correlationId": "924f802d-4ca2-4e64-bf2a-",
+        "apiName": "userInfo",
+        "type": "Request",
+        "payload": {
+            "languageId": "1"
+        }
+    },
+    {
+        "timestamp": "2024-03-19 17:27:39",
+        "appSessionId": "6486de93-1fcd-4000-b085-",
+        "correlationId": "924f802d-4ca2-4e64-bf2a-",
+        "apiName": "userInfo",
+        "type": "Response",
+        "data": {}
     }
-  },
-  {
-    "timestamp": "2024-03-14 16:44:19",
-    "type": "Error",
-    "appSessionId": "6486de93-1fcd-4000-b085-",
-    "correlationId": "06ae9438-4ba2-437b-bc62-",
-    "apiName": "login",
-    "response": {
-      "statusCode": 400,
-      "error": "Bad Request",
-      "message": "No user found"
-    }
-  }
-]
+,{"timestamp":"2024-03-21 15:06:19","correlationId":"4e1c17cf-72c6-48b0-aee6-","apiName":"login","type":"Request","payload":{"mobile":"1111111111","password":"gggggg"}},{"timestamp":"2024-03-21 15:06:19","correlationId":"4e1c17cf-72c6-48b0-aee6-","apiName":"login","type":"Response","data":{"data":{"isOtpVerified":true,"message":"Login successful!","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcmlkIjoxMDcxMzUsImlhdCI6MTcxMTAxMzc3OSwiZXhwIjoxNzExMTAwMTc5fQ.9ZuVBalEdng27axeefGyNEEsP8ucrzeOb7DNe-FsRGA"}}},{"timestamp":"2024-03-21 15:06:50","correlationId":"771926b3-9cb5-40d5-aebf-","apiName":"login","type":"Request","payload":{"mobile":"1111111111","password":"11111"}},{"timestamp":"2024-03-21 15:06:51","correlationId":"771926b3-9cb5-40d5-aebf-","apiName":"login","type":"Response","data":{"data":{"isOtpVerified":true,"message":"Login successful!","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcmlkIjoxMDcxMzUsImlhdCI6MTcxMTAxMzgxMCwiZXhwIjoxNzExMTAwMjEwfQ.7DI5_vNGGBKwp5BMI57mqTg1VLVJA3KcwKtUBzhgaHE"}}},{"timestamp":"2024-03-21 15:07:17","correlationId":"5f9bf420-9110-4006-8b3d-","apiName":"login","type":"Request","payload":{"mobile":"1111111111","password":"eeeeee"}},{"timestamp":"2024-03-21 15:07:17","correlationId":"5f9bf420-9110-4006-8b3d-","apiName":"login","type":"Response","data":{"data":{"isOtpVerified":true,"message":"Login successful!","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcmlkIjoxMDcxMzUsImlhdCI6MTcxMTAxMzgzNywiZXhwIjoxNzExMTAwMjM3fQ.6hd181dp6I23opVJ98Sz4zOEvgHBlW8ZwiX3Gz_k3NA"}}},{"timestamp":"2024-03-21 15:07:25","correlationId":"6b50dc1e-a2f2-4266-a164-","apiName":"login","type":"Request","payload":{"mobile":"1111111111","password":"vvvvvv"}},{"timestamp":"2024-03-21 15:07:26","correlationId":"6b50dc1e-a2f2-4266-a164-","apiName":"login","type":"Response","data":{"data":{"isOtpVerified":true,"message":"Login successful!","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcmlkIjoxMDcxMzUsImlhdCI6MTcxMTAxMzg0NiwiZXhwIjoxNzExMTAwMjQ2fQ.4EIbsTwVt2FK1vth8AjfgNjCXfPCRSgYWE3ztoccXhQ"}}},{"timestamp":"2024-03-21 15:13:29","correlationId":"934ef21a-c868-4fab-8f5e-","apiName":"login","type":"Request","payload":{"mobile":"1111111111","password":"vvvvvv"}},{"timestamp":"2024-03-21 15:13:30","correlationId":"934ef21a-c868-4fab-8f5e-","apiName":"login","type":"Response","data":{"data":{"isOtpVerified":true,"message":"Login successful!","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcmlkIjoxMDcxMzUsImlhdCI6MTcxMTAxNDIxMCwiZXhwIjoxNzExMTAwNjEwfQ.ymQwQ8MW0wN3tTDpBwCUwT1pdc1m_zA9t1uq3u3isNo"}}},{"timestamp":"2024-03-21 15:13:40","correlationId":"3d963f84-61f1-4c34-90e0-","apiName":"login","type":"Request","payload":{"mobile":"1111111111","password":"uuuuu"}},{"timestamp":"2024-03-21 15:13:41","correlationId":"3d963f84-61f1-4c34-90e0-","apiName":"login","type":"Response","data":{"data":{"isOtpVerified":true,"message":"Login successful!","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcmlkIjoxMDcxMzUsImlhdCI6MTcxMTAxNDIyMSwiZXhwIjoxNzExMTAwNjIxfQ.ZpZGIoFEoLrOXnKlG7mC2vmlVXpcN76G5ERAhviNPwc"}}}]

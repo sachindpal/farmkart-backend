@@ -1,0 +1,7 @@
+
+18-03-2024 	
+For Login Api & Telemetry : 
+1. Mobile number and password should be encrypted in Telemetry (store them before decoding the frontend input).
+2. Change the login flow (check staging area first, verify the password too, remove the send OTP logic, etc.).
+3. Telemetry should be a class, and correlationId and sessionId should be part of the constructor.
+4. Change addTelemetry so that we only need to append a new object without reading the whole JSON file.

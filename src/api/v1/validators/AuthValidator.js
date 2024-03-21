@@ -35,19 +35,36 @@ const OTP_VERIFY = {
     "mobile": Joi.number()
         .label("Mobile number")
         .required(),
-
 };
 
 const LOGIN_SCHEMA = {
-    "mobile": Joi.string()
-        .label( "Number" )
-        .regex(/^[0-9]{10}$/)
+    "mobile": Joi.number()
+        .label("Mobile number")
         .required(),
     "password": Joi.string()
         .label( "Password" )
         .required()
 };
 
+
+const CREATE_PASSWORD = {
+    "password": Joi.string().required(),
+    "confirm_password": Joi.any().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } })
+};
+
+/**
+ * Validate for create password
+ *
+ * @param  {object}   req
+ * @param  {object}   res
+ * @param  {function} next
+ * @returns {Promise}
+ */
+const createPasswordValidation = function (req, res, next) {
+    return validate(req.body, CREATE_PASSWORD)
+        .then(() => next())
+        .catch((err) => next(err));
+};
 
 /**
  * Validate create/update user request.
@@ -431,5 +448,5 @@ const varifyOtpValidation = async (req,res,next)=>{
     
  }
 
-const validation = { signupValidation, mobileCheck, checkDeviceToken, decodeReq, otpLimitValidation, mobileCheckVerified, checkCustomerInFile,checkDeviceAndAuthToken,checkUserInfoInFile,checkMobileValidation,otpValidationInFile,otpVerifyValidation,loginValidation,varifyOtpValidation,mobileExists };
+const validation = { signupValidation, mobileCheck, checkDeviceToken, decodeReq, otpLimitValidation, mobileCheckVerified, checkCustomerInFile,checkDeviceAndAuthToken,checkUserInfoInFile,checkMobileValidation,otpValidationInFile,otpVerifyValidation,loginValidation,varifyOtpValidation,mobileExists,createPasswordValidation };
 export default validation

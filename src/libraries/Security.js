@@ -15,7 +15,7 @@ export default class Security {
     static getUserAuthToken(user) {
         console.log('process.env.JWT_SECRET', process.env.JWT_SECRET)
         const token = jwt.sign(JSON.parse(JSON.stringify(user)), process.env.JWT_SECRET, {
-            "expiresIn": '86400'
+            "expiresIn": '1d'
         });
 
         return token;
@@ -29,6 +29,25 @@ export default class Security {
         const truncatedUUID = generatedUUID.substring(0, 24);
 
         return truncatedUUID;
+    }
+
+    /**
+     * verify user auth token.
+     *
+     * @param  {Array} user
+     * @returns {string}
+     */
+    static verifyToken(token) {
+        
+        try{
+            var decoded = jwt.verify(token, process.env.JWT_SECRET);
+             return decoded;
+
+        }catch(err){
+            console.log('err',err)
+            throw err
+        }
+        
     }
 
     /**

@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import logger from "./src/utils/Logger.js";
 import dotenv from 'dotenv';
 import {authRoutes} from './src/routes/api/v1/AuthRoutes.js';
+import {UserRoutes} from './src/routes/api/v1/UserRoutes.js';
 import {appRoutes} from './src/routes/api/v1/AppConfigRouts.js';
 import * as errorHandler from "./src/middlewares/ErrorHandler.js";
 
@@ -35,6 +36,7 @@ app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, '.env')));
 // app.use(multer)
 app.use('/api/auth', authRoutes);
+app.use('/api/user', UserRoutes);
 app.use('/api/app', appRoutes);
 
 app.use( errorHandler.genericErrorHandler );

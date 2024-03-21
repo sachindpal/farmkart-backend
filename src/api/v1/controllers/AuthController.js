@@ -19,7 +19,6 @@ const signup = function( req, res, next ) {
 
 
 const login = function( req, res, next ) {
-    
     return authService
         .login( req, next )
         .then( ( data ) => sendResponse( req, res, HttpStatus.OK, data ) )
@@ -64,6 +63,13 @@ const otpVerifyPassword = (req,res,next)=>{
     .catch((err)=>next(err))
 }
 
+const createPassword = (req,res,next)=>{
+    return authService
+    .createPassword(req,res,next)
+    .then((data)=>sendResponse(req,res,HttpStatus.OK,data))
+    .catch((err)=>next(err))
+}
 
-const Auth = {signup,sendOtp,login,verifyOtp,forgetPassword,otpVerifyPassword}
+
+const Auth = {signup,sendOtp,login,verifyOtp,forgetPassword,otpVerifyPassword,createPassword}
 export default Auth

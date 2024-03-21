@@ -23,7 +23,7 @@ authRoutes.post( "/login" ,
    Auth.login
 );
 
-authRoutes.post( "/send-otp" ,
+authRoutes.post( "/sendOtp" ,
    // validation.decodeReq,
    validation.checkDeviceAndAuthToken,
    validation.checkMobileValidation,
@@ -31,7 +31,7 @@ authRoutes.post( "/send-otp" ,
    Auth.sendOtp
 );
 
-authRoutes.post( "/verify-otp" ,
+authRoutes.post( "/verifyOtp" ,
    // validation.decodeReq,
    validation.checkDeviceAndAuthToken,
    validation.otpVerifyValidation,
@@ -55,6 +55,13 @@ authRoutes.post( "/password-otp-verify" ,
    validation.otpVerifyValidation,
    validation.checkMobileValidation,
    Auth.otpVerifyPassword
+);
+
+authRoutes.post( "/create-password" ,
+   // validation.decodeReq,
+   validation.checkDeviceAndAuthToken,
+   validation.createPasswordValidation,
+   Auth.createPassword
 );
 
 

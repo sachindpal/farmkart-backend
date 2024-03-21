@@ -3,12 +3,12 @@ import AWS from 'aws-sdk';
 import fs from 'fs'
 import Security from './../../../libraries/Security.js'
 import password from "./../../../utils/Password.js";
+import Telemetry from "./../../../utils/Telemetry.js";
 import Boom from "boom";
 import axios from "axios";
 import path from 'path';
 import CommonConstant from '../../../constants/CommonConstant.js';
 import { Worker } from 'worker_threads';
-import moment from 'moment';
 const commonModel = new BaseModel;
 
 /**
@@ -19,11 +19,18 @@ const commonModel = new BaseModel;
  * @param  {Object} next Next request.
  */
 
-const signup = async (req, res, next) => { 
-    //hashing password
-    try {
-        let hashPassword = password.cryptPassword(req.body.password)
+const signup = async (req, res, next) => {
 
+    const appSessionId = req.header('appSessionId');
+    const apiName = 'signup';
+
+    const telemetryObj = new Telemetry(appSessionId, apiName);
+
+    try {
+
+        telemetryObj.addRequest(req.body);
+
+        let hashPassword = password.cryptPassword(req.body.password)
 
         const response = { "data": {} };
         // send the otp to user and and save data in DB
@@ -36,9 +43,7 @@ const signup = async (req, res, next) => {
             'stateid': req.body.state,
             'districtid': req.body.district,
             'wrongVerify': [],
-
         }
-
 
         //create authtoken
         let authData = {
@@ -56,13 +61,15 @@ const signup = async (req, res, next) => {
         return await checkFile(req, creatObject, 'userSignupData.json').then((res) => {
             sendMsg(req, otp)
             response.data.token = authToken;
+            telemetryObj.addResponse(response);
+            telemetryObj.uploadTelemetry();
             return response;
-        }).catch((err) => {
-            throw err;
         })
-    } catch (err) {
-        throw err;
 
+    } catch (err) {
+        telemetryObj.addError(err.output.payload);
+        telemetryObj.uploadTelemetry();
+        throw err;
     }
 
 
@@ -91,162 +98,87 @@ const sendMsg = (req, otp,msg='') => {
         .catch((err) => console.log(err));
 }
 
-const addTelemetry = (telemetryData) => {
-
-    const full_path = 'caching/telemetryBackend.json';
-
-    // Read the contents of root.json
-    fs.readFile(full_path, (err, data) => {
-        if (err) {
-            return false;
-        }
-
-        // Parse telemetryBackend.json data into a JavaScript object
-        const rootObject = JSON.parse(data);
-
-        // Push the new object into the array
-
-        for(let index = 0; index < telemetryData.length ; index++)
-        {
-            rootObject.push(telemetryData[index]);
-        }
-
-        // Convert the updated object back to JSON string
-        const updatedData = JSON.stringify(rootObject, null, 2);
-
-        // Write the updated JSON data back to the file
-        fs.writeFile(full_path, updatedData, (err) => {
-            if (err) {
-                throw err;
-            }
-            return true;
-        });
-    });
-}
-
 
 const login = (async (req, res, next) => {
 
-    let telemetryData = [];
     const appSessionId = req.header('appSessionId');
-    const correlationId = Security.getUUID();
     const apiName = 'login';
+
+    const telemetryObj = new Telemetry(appSessionId, apiName);
 
     try {
 
-        const telemetryRequest = {
-            timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
-            type: 'Request',
-            appSessionId: appSessionId,       
-            correlationId: correlationId,     
-            apiName: apiName,
-            payload: req.body
-        }
-        telemetryData.push(telemetryRequest);
+        telemetryObj.addRequest(req.body);
 
         const response = { "data": {} };
 
-        await commonModel.fetchObj({ 'mobileno': req.body.mobile }, 'customer').then(async (data) => {
-            if (data.length > 0) {
-                // User Found in our DB!
-                const match = password.compare(req.body.password, data[0].password);
-
-                if (match) {
-                    // create authtoken
-                    let authData = {
-                        'customerid': data[0].customerid
+        // First, we need to check if the user's mobile number is present in our staging area (userSignupData) or not.
+        const full_path = 'userSignupData.json';
+        let isUserInStaging = false;
+        let json = readFile(req, full_path);
+        if (json.length > 0) {
+            json = JSON.parse(json);
+            for (let index = 0; index < json.length; index++) {
+                const element = json[index];
+                if (element['mobileno'] == req.body.mobile) {
+                    isUserInStaging = true;
+                    // Check if the password also matches.
+                    if (element['mobileno'] == req.body.password) {
+                        response.data.isOtpVerified = false;
+                        response.data.message = "Please verify or resend the OTP."
                     }
-
-                    let authToken = Security.getUserAuthToken(authData)
-
-                    await commonModel.updateObj({ 'token': authToken }, { 'customerid': data[0].customerid }, 'customer');
-
-                    response.data.isOtpVerified = true;
-                    response.data.message = 'Login successful!';
-                    response.data.token = authToken;
-
-                } else {
-                    const data = { "error_code": "Incorrect_password" };
-                    throw Boom.badRequest('Incorrect password', data);
+                    else {
+                        const data = { "error_code": "Incorrect_password" };
+                        throw Boom.badRequest('Incorrect password', data);
+                    }
+                    break;
                 }
+            }
+        }
 
-            } else {
-                // If User not exist in our DB!
-                // We need to check userSignupData (Staged Area) !
-
-                const full_path = 'userSignupData.json';
-                let isUserFound = false;
-                let json = readFile(req, full_path);
-
-                if (json.length > 0) {
-
-                    json = JSON.parse(json);
-
-                    for (let index = 0; index < json.length; index++) {
-
-                        const element = json[index];
-
-                        if (element['mobileno'] == req.body.mobile) {
-
-                            isUserFound = true;
-
-                            const updatedOtp = getOtp()
-                            let authData = {
-                                'customerid': req.body.mobile
-                            }
-                            let authToken = Security.getUserAuthToken(authData);
-
-                            element[req.body.mobile] = [updatedOtp];
-                            element['device-token'] = req.headers['device-token'];
-                            element['authToken'] = authToken;
-
-                            updateOtpOnFile(json, full_path);
-                            sendMsg(req, updatedOtp);
-                            
-                            response.data.isOtpVerified = false;
-                            response.data.message = 'OTP sent to the user successfully!';
-                            response.data.token = authToken;
-
-                            break;
+        // If the user is not found in the staging area, we need to check the database.
+        if (isUserInStaging == false) {
+            await commonModel.fetchObj({ 'mobileno': req.body.mobile }, 'customer').then(async (data) => {
+                if (data.length > 0) {
+                    // User found in our DB!
+                    const match = password.compare(req.body.password, data[0].password);
+                    if (match) {
+                        // Create auth token!
+                        let authData = {
+                            'customerid': data[0].customerid
                         }
+                        // Update the token in the DB.
+                        let authToken = Security.getUserAuthToken(authData)
+                        await commonModel.updateObj({ 'token': authToken }, { 'customerid': data[0].customerid }, 'customer');
+                        response.data.isOtpVerified = true;
+                        response.data.message = 'Login successful!';
+                        response.data.token = authToken;
+                    } else {
+                        const data = { "error_code": "Incorrect_password" };
+                        throw Boom.badRequest('Incorrect password', data);
                     }
-                }
-
-                // User not exist in our Staging Area!, Register Again 
-                if(isUserFound == false)
-                {
+                } else {
+                    // User Not Found in our DB!
                     const data = { "error_code": "INVALID_USER" };
                     throw Boom.badRequest('No user found', data);
                 }
-            }
-
-            // If everything works well 
-            const telemetryResponse = {
-                timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
-                type: 'Response',
-                appSessionId: appSessionId,               
-                correlationId: correlationId,             
-                apiName: apiName,
-                response : response
-            }
-            telemetryData.push(telemetryResponse);
-            addTelemetry(telemetryData);
-            return response;
-        })
-    } catch (err) {
-        const telemetryError = {
-            timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
-            type: 'Error',
-            appSessionId: appSessionId,               
-            correlationId: correlationId,             
-            apiName: apiName,
-            response : err.output.payload
+            })
         }
-        telemetryData.push(telemetryError);
-        addTelemetry(telemetryData);
+
+        // Store telemetry if everything works well.
+        telemetryObj.addResponse(response);
+        telemetryObj.uploadTelemetry();
+        return response;
+
+    } catch (err) {
+        // Storing telemetry in case we encounter exceptions.
+        telemetryObj.addError(err.output.payload);
+        telemetryObj.uploadTelemetry();
         throw err
     }
 })
+
+
 
 /**
  * Send otp service by @sachinpal .
@@ -256,22 +188,34 @@ const login = (async (req, res, next) => {
  * @param  {Object} next Next request.
  */
 const sendOtp = async (req, res, next) => {
+
+    const appSessionId = req.header('appSessionId');
+    const apiName = 'sendOtp';
+
+    const telemetryObj = new Telemetry(appSessionId, apiName);
+
+    telemetryObj.addRequest(req.body);
+
     return validationForSendOtp(req, 'userSignupData.json').then(() => {
         const response = { "data": {} };
+        response.data.message = 'OTP sent to the user successfully!';
+        telemetryObj.addResponse(response);
+        telemetryObj.uploadTelemetry();
         return response;
     }).catch((err) => {
+        telemetryObj.addError(err.output.payload);
+        telemetryObj.uploadTelemetry();
         throw err
     })
-
 }
 
 const checkFile = async (req, obj, fileName) => {
     var array = [];
     const full_path = `caching/${fileName}`;
 
-    let json = await readFile(req,fileName)
-    console.log('json',json)
-    if(json.length > 0){
+    let json = await readFile(req, fileName)
+    console.log('json', json)
+    if (json.length > 0) {
         json = JSON.parse(json);
 
 
@@ -283,13 +227,13 @@ const checkFile = async (req, obj, fileName) => {
             throw Boom.badRequest('user already exist.', data);
         } else {
             json.push(obj);
-            updateJsonOnFile(json,full_path)
+            updateJsonOnFile(json, full_path)
             return true
 
         }
     } else {
         array.push(obj);
-        updateJsonOnFile(array,full_path)
+        updateJsonOnFile(array, full_path)
         return true
     }
 
@@ -299,9 +243,9 @@ const validationForSendOtp = async (req, fileName) => {
     const authToken = req.header('authorization').replace('Bearer ', '');
     const deviceToken = req.headers['device-token']
 
-    let json = readFile(req,fileName)
-    
-    if(json.length > 0){
+    let json = readFile(req, fileName)
+
+    if (json.length > 0) {
         json = JSON.parse(json);
 
         //condition for check max otp limit
@@ -345,20 +289,20 @@ const validationForSendOtp = async (req, fileName) => {
 
 }
 
-const readFile = async (req,fileName)=>{
+const readFile = async (req, fileName) => {
     // let json;
     const full_path = `caching/${fileName}`;
     let json = fs.readFileSync(full_path, "utf8")
     return json;
 
-    
+
 }
 
-const updateJsonOnFile = (obj,fileName)=>{
-        const WriteWorker =  new Worker(`${import.meta.dirname}/WriteFile.js`,{
-        workerData: {fileName:fileName,obj:obj}
+const updateJsonOnFile = (obj, fileName) => {
+    const WriteWorker = new Worker(`${import.meta.dirname}/WriteFile.js`, {
+        workerData: { fileName: fileName, obj: obj }
     });
-   return WriteWorker.on('message',data=>data );
+    return WriteWorker.on('message', data => data);
 
 }
 
@@ -389,7 +333,7 @@ const verifyOtp = async (req, res, next) => {
                 'customerid': custId
             }
 
-           return await commonModel.createObj(customerObj, 'customer').then(async (custId) => {
+            return await commonModel.createObj(customerObj, 'customer').then(async (custId) => {
                 const addressObj = {
                     'customerid': custId,
                     'name': userData[0].fullname,
@@ -397,7 +341,7 @@ const verifyOtp = async (req, res, next) => {
                     'districtid': userData[0].districtid,
                 }
 
-              return  await commonModel.createObj(addressObj, 'address').then((addresid) => {
+                return await commonModel.createObj(addressObj, 'address').then((addresid) => {
                     let authData = {
                         'customerid': custId
                     }
@@ -446,17 +390,17 @@ const verifyOtp = async (req, res, next) => {
  * @param  {Object} next Next request.
  */
 
-const appConfig = async (req, res, next) => { 
+const appConfig = async (req, res, next) => {
     const response = { "data": {} };
     //hashing password
-    try{
-        return commonModel.fetchAll('appConfig').then((data)=>{
+    try {
+        return commonModel.fetchAll('appConfig').then((data) => {
             response.data = data;
             return response;
         })
-    }catch(err){
+    } catch (err) {
         throw err;
-        
+
     }
 }
 
@@ -480,7 +424,7 @@ const forgetPassword = async (req, res, next) => {
             json = JSON.parse(json);
             const numberExist = json.filter((val)=>val[req.body.mobile]!=undefined);
             
-            if(numberExist[0][req.body.mobile].length > 2 && req.headers['device-token']==numberExist[0].deviceToken){
+            if(numberExist.length !=0 && numberExist[0][req.body.mobile].length > 2 && req.headers['device-token']==numberExist[0].deviceToken){
                 const data = { "error_code": "81" };
                 throw Boom.badRequest('OTP send time limit exist', data);
             }
@@ -531,7 +475,6 @@ const forgetPassword = async (req, res, next) => {
 const passwordOtpVerify = async (req, res, next) => { 
     const response = { "data": {} };
     //hashing password
-    const otp = getOtp();
     const full_path = `caching/passwordOtp.json`;
     try{
         let json = await readFile(req,'passwordOtp.json')
@@ -563,9 +506,23 @@ const passwordOtpVerify = async (req, res, next) => {
                 throw Boom.badRequest('Session expired', data);
             }
 
-                // console.log('json',json)
+           return await commonModel.fetchFirstObj({'mobileno':req.body.mobile},'customer').then(async(customerData)=>{
+                let authTokenData = {
+                    'customerid': customerData.customerid
+                }
+
+               await commonModel.updateObj({'forgot_otp':req.body.otp},{'customerid':customerData.customerid},'customer');
+
+            let authToken = Security.getUserAuthToken(authTokenData)
             updateJsonOnFile(updateData,full_path)
+            response.data.token = authToken;
             return response;
+                
+            }).catch((err)=>{
+                throw err
+            })
+
+            
  
         }else{
             const data = { "error_code": "88" };
@@ -579,5 +536,47 @@ const passwordOtpVerify = async (req, res, next) => {
 }
 
 
-const authService = { signup, sendOtp, verifyOtp,login,updateJsonOnFile,appConfig, forgetPassword,passwordOtpVerify};
+/**
+ * create password service by @sachinpal .
+ *
+ * @param  {object} req
+ * @param  {object} res
+ * @param  {Object} next Next request.
+ */
+
+const createPassword = async (req, res, next) => { 
+    const response = { "data": {} };
+    const authToken = req.header('authorization').replace('Bearer ', '');
+
+    try{
+
+
+
+        const userObj = Security.verifyToken(authToken);
+        console.log(userObj);
+
+
+        //check if user verified otp or not
+        const userData = await commonModel.fetchFirstObj({'customerid':userObj.customerid},'customer');
+
+        if(!userData.forgot_otp){
+            const data = { "error_code": "75" };
+            throw Boom.badRequest("User not veried otp for forget password.", data);
+        }
+
+
+        let hashPassword = password.cryptPassword(req.body.password)
+
+        await commonModel.updateObj({'password':hashPassword,'forgot_otp':null},{'customerid':userObj.customerid},'customer');
+        return response;
+
+    }catch(err){
+        const data = { "error_code": "81" };
+        throw Boom.badRequest(err, data);
+        
+        
+    }
+}
+
+const authService = { signup, sendOtp, verifyOtp,login,updateJsonOnFile,appConfig, forgetPassword,passwordOtpVerify,createPassword};
 export default authService;
